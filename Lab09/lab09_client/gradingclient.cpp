@@ -80,12 +80,6 @@ int main(int argc, char *argv[]) {
         }
 
         if (connect(clientSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1) {
-            // if (errno == EINPROGRESS || errno == EALREADY || errno == EWOULDBLOCK || errno == EINTR) {
-            //     std::cout << "Request timeout" << std::endl;
-            //     timeoutRequests++;
-            //     close(clientSocket);
-            //     continue;
-            // }
             perror("Connection error");
             close(clientSocket);
             errorRequests++;
