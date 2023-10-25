@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     std::ifstream sourceFile(sourceFileName);
     if (!sourceFile.is_open()) {
         std::cerr << "Error opening source code file: " << sourceFileName << std::endl;
-        close(clientSocket);
+        // close(clientSocket);
         return 1;
     }
 

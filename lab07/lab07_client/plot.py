@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Initialize lists to store results
 #num_clients_list = list(range(1, 9))
-num_clients_list= [2,5,10,20,40]
+num_clients_list= [10,20,40,80,100,200]
 throughput_list = []
 avg_response_time_list = []
 # requests_sent_rate_list = []
@@ -40,7 +40,7 @@ for num_clients in num_clients_list:
     # average_active_threads_list.append(average_active_threads)
 
     # overall_cpu_utilization_list.append(overall_cpu_utilization)
-with open('performance_metrics_testLab07.csv', 'w', newline='') as csv_file:
+with open('performance_metrics_test_lab07.csv', 'w', newline='') as csv_file:
     writer = csv.writer(csv_file)
     writer.writerow(['Num Clients', 'Throughput', 'Avg Response Time'])
 
