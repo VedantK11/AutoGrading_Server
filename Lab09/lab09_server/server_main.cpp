@@ -40,6 +40,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
+  // Create a thread to calculate and display the average request in a queue
+    pthread_t averageThread;
+    if (pthread_create(&averageThread, NULL, calculateAverage, NULL) != 0) {
+        std::cerr << "Failed to create the average thread." << std::endl;
+        return 1;
+    }
 
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {

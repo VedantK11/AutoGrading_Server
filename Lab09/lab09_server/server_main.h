@@ -14,5 +14,6 @@ extern std::queue<ThreadData> requestQueue;
 
 
 void* handleClient(void* arg);
+void* calculateAverage(void* arg) ;
 
 int main(int argc, char* argv[]);

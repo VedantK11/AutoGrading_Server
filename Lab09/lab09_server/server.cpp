@@ -20,6 +20,26 @@
 //std::queue<ThreadData> requestQueue;
 
 
+
+// Function for calculating and displaying the average
+void* calculateAverage(void* arg) {
+    while (true) {
+        
+        // Calculate the average number of requests in the queue
+         if(requestQueue.size()!=0){
+         averageRequests+= requestQueue.size();
+       avgCount++;
+       
+        std::cout << "Average Requests in Queue: " << averageRequests /avgCount<< " requests" << std::endl;
+        }
+
+        // Sleep for a while before recalculating the average
+        sleep(0.005); // Adjust the sleep duration as needed
+    }
+}
+
+
+
 // Function to compile and execute the source code
 std::string compileAndRun(const char* sourceFileName, const std::string& folder) {
     std::string response;
