@@ -67,6 +67,3 @@
 └── README.md
 ```
 
-
-## Division of coding work
-
