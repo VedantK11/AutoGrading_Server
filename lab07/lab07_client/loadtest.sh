@@ -1,7 +1,8 @@
 #!/bin/bash
-SERVER_IP="10.130.171.214"
+# SERVER_IP="10.130.171.214"
 #SERVER_IP="192.168.0.5"
-PORT="8888"
+SERVER_IP="127.0.0.1"
+PORT="8000"
 SOURCE_FILE="pass.cpp"
 
 if [ $# -ne 3 ]; then
@@ -33,36 +34,41 @@ wait
 # Calculate overall throughput and average response time
 totalThroughput=0
 totalResponseTime=0
-totalSamples=0
+totalSuccessfulResponses=0
+throughput=0
+totalThroughput=0.0
 
 for ((i = 1; i <= numClients; i++)); do
     output_file="$outputDir/client_$i.txt"
 
     # Calculate throughput (number of responses / total time)
 #    numResponses=$(grep "Response successful: PASS" "$output_file" | wc -l)
-    #numSamples=$(grep "Number of Successful Responses:" "$output_file" | awk '{print $NF}')
+    #numSuccessfulResponses=$(grep "Number of Successful Responses:" "$output_file" | awk '{print $NF}')
     #clientTime=$(grep "Time Taken for Completing the Loop:" "$output_file" | awk '{print $(NF-1)}')
-    clientTime=$(grep "Average Response Time:" "$output_file" | awk '{print $(NF-1)}')
-    floatvalue=0.0
-    result=$(echo "$clientTime > $floatvalue" | bc)
-    if [ $result -eq 1 ]; then
-         throughput=$(echo "scale=2; 1 / $clientTime" | bc)
-    else
-         throughput=0
-    fi
-    totalThroughput=$(echo "$totalThroughput + $throughput" | bc)
+    # clientTime=$(grep "Average Response Time:" "$output_file" | awk '{print $(NF-1)}')
+    # floatvalue=0.0
+    # result=$(echo "$clientTime > $floatvalue" | bc)
+    # if [ $result -eq 1 ]; then
+    #      throughput=$(echo "scale=2; 1 / $clientTime" | bc)
+    # else
+    #      throughput=0
+    # fi
 
+   
     # Calculate average response time
     avgResponseTime=$(grep "Average Response Time:" "$output_file" | awk '{print $(NF-1)}')
-    numSamples=$(grep "Number of Successful Responses:" "$output_file" | awk '{print $NF}')
-    totalResponseTime=$(echo "$totalResponseTime + ($avgResponseTime * $numSamples)" | bc)
-    totalSamples=$(echo "$totalSamples + $numSamples" | bc)
+    numSuccessfulResponses=$(grep "Number of Successful Responses:" "$output_file" | awk '{print $NF}')
+    totalResponseTime=$(echo "$totalResponseTime + ($avgResponseTime * $numSuccessfulResponses)" | bc)
+    totalSuccessfulResponses=$(echo "$totalSuccessfulResponses + $numSuccessfulResponses" | bc)
+    throughput=$(grep "Throughput:" "$output_file" | awk '{print $(NF-1)}' )
+    totalThroughput=$(echo "scale=2; $totalThroughput + $throughput" | bc)
+
 done
 
 # Calculate overall average response time
-#if [ $totalSamples -gt 0 ]; then
-if [ -n "$totalSamples" ] && [ "$totalSamples" -gt 0 ]; then
-    overallAvgResponseTime=$(echo "scale=2; $totalResponseTime / $totalSamples" | bc)
+#if [ $totalSuccessfulResponses -gt 0 ]; then
+if [ -n "$totalSuccessfulResponses" ] && [ "$totalSuccessfulResponses" -gt 0 ]; then
+    overallAvgResponseTime=$(echo "scale=2; $totalResponseTime / $totalSuccessfulResponses" | bc)
     #totalThroughput=$(echo "scale=2; 1/$overallAvgResponseTime" | bc)
 else
     overallAvgResponseTime=0
