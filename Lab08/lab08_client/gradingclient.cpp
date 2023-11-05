@@ -21,14 +21,14 @@ int main(int argc, char *argv[]) {
     int sleepTimeSeconds = std::atoi(argv[4]);
     int timeoutSeconds = std::atoi(argv[5]);
 
-    double successful_totalTime = 0.0;
-    double totalTime_of_loop = 0.0;
     int successfulResponses = 0;
     double responseTime = 0;
     int totalRequests = loopNum;
-    int successfulRequests = 0;
+    // int successfulRequests = 0;
     int timeoutRequests = 0;
     int errorRequests = 0;
+    double successful_totalTime = 0.0;
+    double totalTime = 0.0;
 
     // Extract server IP and port from the command line argument
     size_t colonPos = serverIPPort.find(':');
@@ -49,6 +49,10 @@ int main(int argc, char *argv[]) {
 
     std::string sourceCodeContent((std::istreambuf_iterator<char>(sourceFile)),
                                   std::istreambuf_iterator<char>());
+
+
+    struct timeval start, end,response_start,response_end;
+    gettimeofday(&start, NULL);
 
     // Perform the request-response loop
     for (int i = 0; i < loopNum; i++) {
@@ -87,8 +91,8 @@ int main(int argc, char *argv[]) {
         }
 
         // Measure the time just before sending the request (Tsend)
-        struct timeval start, end;
-        gettimeofday(&start, NULL);
+      gettimeofday(&response_start,NULL);
+
 
         // Send the source code content to the server
         send(clientSocket, sourceCodeContent.c_str(), sourceCodeContent.size(), 0);
@@ -112,32 +116,40 @@ int main(int argc, char *argv[]) {
             errorRequests++;
         } else {
             // Measure the time just after getting the response (Trecv)
-            gettimeofday(&end, NULL);
-            double responseTime = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+            gettimeofday(&response_end, NULL);
+            double responseTime = (response_end.tv_sec - response_start.tv_sec) + (response_end.tv_usec - response_start.tv_usec) / 1000000.0;
 
             buffer[bytesRead] = '\0';
             std::cout << "Response successful: " << buffer << std::endl;
             successful_totalTime += responseTime;
             successfulResponses++;
-            successfulRequests++;
         }
 
         close(clientSocket);
         sleep(sleepTimeSeconds);
-        totalTime_of_loop += responseTime + sleepTimeSeconds;
     }
+
+ // Measure the time just after getting the response (Trecv)
+    gettimeofday(&end, NULL);
+     totalTime = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 
     if (successfulResponses == 0) {
         std::cout << "Average Response Time: " << (successful_totalTime) << " seconds" << std::endl;
     } else {
         std::cout << "Average Response Time: " << (successful_totalTime / successfulResponses) << " seconds" << std::endl;
     }
+
     std::cout << "Number of Successful Responses: " << successfulResponses << std::endl;
-    std::cout << "Time Taken for Completing the Loop: " << totalTime_of_loop << " seconds" << std::endl;
+    std::cout << "Total time of the client: " << totalTime << " seconds" << std::endl;
+    std::cout << "Throughput: " << successfulResponses/totalTime << " requests/second" <<std::endl;
     printf("Total Requests Sent: %d\n", totalRequests);
-    printf("Successful Requests (Goodput): %d\n", successfulRequests);
-    printf("Timeout Requests: %d\n", timeoutRequests);
-    printf("Error Requests: %d\n", errorRequests);
+    // printf("Successful Requests (Goodput): %d\n", successfulRequests);
+   
+    //time out rate
+    std::cout << "Timeout Rate: " << timeoutRequests/totalTime << " requests/second" <<std::endl;
+    
+    //error out rate
+    std::cout << "Error Rate: " << errorRequests/totalTime << " requests/second" <<std::endl;
 
     return 0;
 }
