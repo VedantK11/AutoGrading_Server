@@ -4,7 +4,14 @@ import matplotlib.pyplot as plt
 
 # Initialize lists to store results
 #num_clients_list = list(range(1, 9))
-num_clients_list= [10,20,40,80,100,200]
+num_clients_list= [
+10,
+20,
+40,
+80,
+100,
+200
+]
 throughput_list = []
 avg_response_time_list = []
 # requests_sent_rate_list = []

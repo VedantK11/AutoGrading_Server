@@ -72,7 +72,8 @@ averageIdle=$(($totalIdle / lines))
 averageCPU=$(echo "100 - $averageIdle" | bc)
 
 # Calculate overall throughput and average response time
-throughput=0
+successfullthroughput=0
+totalsuccessfullThroughput=0.0
 totalThroughput=0.0
 timeoutRate=0
 totalTimeoutRate=0.0
@@ -84,17 +85,17 @@ totalSamples=0
 for ((i = 1; i <= numClients; i++)); do
     output_file="$outputDir/client_$i.txt"
 
-    # Calculate throughput (requests per second)
+    # Calculate successfullthroughput (requests per second)
     # clientTime=$(grep "Average Response Time:" "$output_file" | awk '{print $(NF-1)}')
     # floatvalue=0.0
     # result=$(echo "$clientTime > $floatvalue" | bc)
     # if [ $result -eq 1 ]; then
-    #      throughput=$(echo "scale=2; 1 / $clientTime" | bc)
+    #      successfullthroughput=$(echo "scale=2; 1 / $clientTime" | bc)
     # else
-    #      throughput=0
+    #      successfullthroughput=0
     # fi
     
-    # totalThroughput=$(echo "$totalThroughput + $throughput" | bc)
+    # totalsuccessfullThroughput=$(echo "$totalsuccessfullThroughput + $successfullthroughput" | bc)
 
     # Calculate average response time
     avgResponseTime=$(grep "Average Response Time:" "$output_file" | awk '{print $(NF-1)}')
@@ -106,8 +107,9 @@ for ((i = 1; i <= numClients; i++)); do
     # # totalRequests=$($totalRequests + $(grep "Total Requests Sent:"  "$output_file" | awk '{print $NF}' ) )
     # successfulRequests=$($successfulRequests + $(grep "Successful Requests (Goodput): " "$output_file" | awk '{print $NF}'))
     
-    throughput=$(grep "Throughput:" "$output_file" | awk '{print $(NF-1)}' )
-    totalThroughput=$(echo "scale=2; $totalThroughput + $throughput" | bc)
+    successfullthroughput=$(grep "Throughput:" "$output_file" | awk '{print $(NF-1)}')
+    totalsuccessfullThroughput=$(echo "scale=2; $totalsuccessfullThroughput +$successfullthroughput" | bc)
+     
     timeoutRate=$(grep "Timeout Rate:" "$output_file" | awk '{print $(NF-1)}')
     totalTimeoutRate=$(echo "scale=2; $totalTimeoutRate + $timeoutRate" | bc)
     errorRate=$(grep "Error Rate:" "$output_file" | awk '{print $(NF-1)}')
@@ -122,8 +124,8 @@ done
 # timeoutRateRate=$(echo "scale=2; $timeoutRate / $totalRequests" | bc)
 # errorRateRate=$(echo "scale=2; $errorRate / $totalRequests" | bc)
 # successfulRequestsRate=$(echo "scale=2; $totalThroughput / $numClients" | bc)
-RequestsSentRate=$(echo "scale=2; $totalThroughput +$totalTimeoutRate +$totalErrorRate" | bc)
-
+RequestsSentRate=$(echo "scale=2; $totalsuccessfullThroughput +$totalTimeoutRate +$totalErrorRate" | bc)
+totalThroughput=$(echo "scale=2; $totalsuccessfullThroughput +$totalTimeoutRate +$totalErrorRate" | bc)
 # Calculate the average number of active threads
 #activeThreads=$(pgrep gradingserver | wc -l)
 
@@ -136,7 +138,8 @@ fi
 
 # echo "Overall Throughput: $totalThroughput requests/second"
 echo "Overall Average Response Time: $overallAvgResponseTime seconds"
-echo "Successful Requests Rate(Goodput): $totalThroughput requests/second"
+echo "Overall Throughput: $totalThroughput requests/second"
+echo "Successful Requests Rate(Goodput): $totalsuccessfullThroughput requests/second"
 echo "Timeout Requests Rate: $totalTimeoutRate"
 echo "Error Requests Rate: $totalErrorRate"
 echo "Requests Sent Rate: $RequestsSentRate"
