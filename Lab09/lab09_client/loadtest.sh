@@ -12,7 +12,7 @@ fi
 #Server_Ip="10.96.15.177";
 # Server_Ip="10.130.171.214"
 Server_Ip="127.0.0.1"
-portNum="8000"
+portNum="8001"
 numClients=$1
 loopNum=$2
 sleepTimeSeconds=$3
@@ -39,15 +39,49 @@ activeThreads=0
 
 for ((i = 1; i <= numClients; i++)); do
     ./gradingclient "$Server_Ip:$portNum" pass.cpp "$loopNum" "$sleepTimeSeconds" "$timeOutTime" > "$outputDir/client_$i.txt" &
-    pids[${i}]=$! # Store the PID of each background job
+    # pids[${i}]=$! # Store the PID of each background job
 done
 
-activeThreads=$(ps -eLf | grep -w ./gradingserver | awk '{ if(NR==1){ print $6}}')
+# activeThreads=$(ps -eLf | grep -w ./gradingserver | awk '{ if(NR==1){ print $6}}')
 
 # Wait for all background jobs to finish
-for ((i = 1; i <= numClients; i++)); do
-    wait ${pids[i]}
+# for ((i = 1; i <= numClients; i++)); do
+#     wait ${pids[i]}
+# done
+
+s_pid=$(pgrep server)
+starttime=$(date +%s)
+echo "Average number of threads : " > nlwp.txt
+# echo "Average CPU Utilisation : " > cput.txt
+nlwp=$(ps -T -p $s_pid | wc -l)
+nlwp=`expr $nlwp - 3`
+echo $nlwp
+# echo $nlwp >> nlwp.txt# vmstat 2 >> cput.txt &
+echo $nlwp >> nlwp.txt
+# v_pid=$(pgrep vmstat)
+
+echo $nlwp
+less=$(ps aux | grep -i "./gradingclient 127.0" | wc -l)
+
+while [[ $less -gt 1 ]];
+    do 
+    endtime=$(date +%s)
+    diff=`expr $endtime - $starttime`
+
+    if [[ $diff -gt 1 ]]; then
+        starttime=$(date +%s)
+        echo "Average number of threads : " >> nlwp.txt
+        # echo "Average CPU Utilisation : " >> cput.txt
+        nlwp=$(ps -T -p $s_pid | wc -l)
+        nlwp=`expr $nlwp - 3`
+        echo $nlwp >> nlwp.txt
+        # vmstat | tail -1 | sed -E 's/[ ]+/./g' | awk -F. '{print $16}' >> cput.txt
+    fi
+    less=$(ps aux | grep -i "./gradingclient 127.0" | wc -l)
 done
+
+# kill -9 $v_pid
+echo "$nlwp"
 
 
 # Wait for vmstat to finish and collect data
@@ -135,6 +169,30 @@ if [ $totalSamples -gt 0 ]; then
 else
     overallAvgResponseTime=0
 fi
+
+
+# cput=$(cat cput.txt | sed -E 's/[ ]+/./g' | awk -F. '{print $(NF-2)}' | grep -E "[0-9]+")
+lwp=$(cat nlwp.txt | grep -E "[0-9]+")
+# avg_cpu_ut=0
+avg_nlwp=0
+# it=0
+# for i in $cput
+#     do
+#     avg_cpu=`expr 100 - $i`
+#     avg_cpu_ut=`expr $avg_cpu_ut + $avg_cpu`
+#     it=`expr $it + 1`
+# done
+# avg_cpu_ut=$(echo "scale=3; $avg_cpu_ut / $it" | bc)
+
+it=0
+for i in $lwp
+    do
+    avg_nlwp=`expr $i + $avg_nlwp`
+    it=`expr $it + 1`
+done
+avg_nlwp=$(echo "scale=3; $avg_nlwp / $it" | bc)
+activeThreads=$avg_nlwp
+
 
 # echo "Overall Throughput: $totalThroughput requests/second"
 echo "Overall Average Response Time: $overallAvgResponseTime seconds"
