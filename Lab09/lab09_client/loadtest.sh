@@ -12,7 +12,7 @@ fi
 #Server_Ip="10.96.15.177";
 # Server_Ip="10.130.171.214"
 Server_Ip="127.0.0.1"
-portNum="8001"
+portNum="8000"
 numClients=$1
 loopNum=$2
 sleepTimeSeconds=$3

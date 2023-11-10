@@ -47,14 +47,18 @@ import matplotlib.pyplot as plt
 
 # Data
 num_clients = [10, 20, 40, 80, 100, 200, 300, 400]
-avg_requests = [1.07, 1.08, 7.13, 28.04, 38.75, 83.02, 133.36, 189.32]
+# avg_requests = [1.07, 1.08, 7.13, 28.04, 38.75, 83.02, 133.36, 189.32]
+avg_threads = [16, 16, 16, 16, 16, 16, 16, 16]
 
 # Plotting
 plt.figure(figsize=(10, 6))
-plt.plot(num_clients, avg_requests, marker='o', linestyle='-', color='b')
+# plt.plot(num_clients, avg_requests, marker='o', linestyle='-', color='b')
+plt.plot(num_clients, avg_threads, marker='s', linestyle='-', color='r')
 
 plt.xlabel('Number of Clients')
-plt.ylabel('Average Requests in Queue')
-plt.title('Number of Clients vs. Average Requests in Queue')
+# plt.ylabel('Average Requests in Queue')
+plt.ylabel('Average Threads')
+# plt.title('Number of Clients vs. Average Requests in Queue')
+plt.title('Number of Clients vs. Average number of Threads')
 plt.grid(True)
 plt.show()
