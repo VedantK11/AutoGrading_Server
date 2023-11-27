@@ -1,0 +1,109 @@
+#!/bin/bash
+
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <serverIP:port> <sourceCodeFile>  <num_clients> <polling_interval> "
+    exit 1
+fi
+
+serverIPPort=$1
+sourceCodeFile=$2
+numClients=$3
+pollingInterval=$4
+maxAttempts=15
+
+# Function to get the current timestamp
+get_timestamp() {
+    date +%s%N
+}
+
+# Function to calculate response time
+calculate_response_time() {
+    local start_time=$1
+    local end_time=$2
+    local elapsed_time=$((end_time - start_time))
+    echo $((elapsed_time / 1000000))
+}
+
+# Submit a new request and capture the request ID
+submit_new_request() {
+    ./client new $serverIPPort $sourceCodeFile
+}
+execute_client() {
+    local client_num=$1
+    local output_file="$outputDir/client_$client_num.txt"
+
+    echo "Executing client $client_num..."
+    python3 clientPolling.py $serverIPPort $sourceCodeFile $pollingInterval $maxAttempts > $output_file &
+
+    # Capture the process ID of the background client
+    # local client_pid=$!
+    local client_pid=$(jobs -p %)
+    echo $client_pid
+}
+# Array to store process IDs of background clients
+client_pids=()
+
+# Array to store response times and throughput
+response_times=()
+throughputs=()
+
+# Create a directory to store client output files
+outputDir="client_output"
+mkdir -p "$outputDir"
+
+# Start clients in the background and store their PIDs
+# for ((i = 1; i <= numClients; i++)); do
+#     ./clientpolling.sh $serverIPPort $sourceCodeFile $pollingInterval $maxAttempts > "$outputDir/client_$i.txt" &
+#      pids[${i}]=$! # Store the PID of each background job
+# done
+
+# for ((i = 1; i <= numClients; i++)); do
+#     wait ${pids[i]}
+# done
+
+# Launch multiple clients
+for ((i = 1; i <= $numClients; i++)); do
+    # client_pid=$(execute_client $i)
+    # client_pids+=("$client_pid")
+    output_file="$outputDir/client_$client_num_$i.txt"
+     python3 clientPolling.py $serverIPPort $sourceCodeFile $pollingInterval  > $output_file &
+    pids[${i}]=$! # Store the PID of each background job
+    echo $pids[${i}]
+done
+
+for ((i = 1; i <= $numClients; i++)); do
+    wait ${pids[i]}
+done
+
+# Wait for all clients to finish
+# for pid in "${client_pids[@]}"; do
+#     wait $pid
+# done
+
+# Calculate average response time
+for ((i = 1; i <= $numClients; i++)); do
+    output_file="$outputDir/client_$i.txt"
+    if grep -q "Received 'done' response" $output_file; then
+        response_time=$(cat $output_file | grep "Response time:" | awk '{print $3}')
+        throughputs+=(1/$response_time)
+    else
+        throughputs+=(0)
+        response_time=0
+    fi
+    response_times+=($response_time)
+done
+
+# Calculate average response time
+average_time=0
+for time in "${response_times[@]}"; do
+    average_time=$(awk "BEGIN {print $average_time + $time}")
+done
+average_time=$(awk "BEGIN {print $average_time / $numClients}")
+
+total_throughput=0
+for throughput in "${throughputs[@]}"; do
+    total_throughput=$(awk "BEGIN {print $total_throughput + $throughput}")
+done
+
+echo "Average Response Time Across $numClients Clients: $average_time seconds"
+echo "Overall Throughput Across $numClients Clients: $total_throughput"

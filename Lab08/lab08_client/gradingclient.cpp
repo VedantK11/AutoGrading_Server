@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     //time out rate
     std::cout << "Timeout Rate: " << timeoutRequests/totalTime << " requests/second" <<std::endl;
     
-    //error out rate
+    //error  rate
     std::cout << "Error Rate: " << errorRequests/totalTime << " requests/second" <<std::endl;
 
     return 0;

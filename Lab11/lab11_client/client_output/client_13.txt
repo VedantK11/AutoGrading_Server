@@ -1,0 +1,13 @@
+Submitting new request...
+Received request ID: 36
+36
+
+Attempt 1: Status not done yet. Polling again after 5 seconds...
+36
+Your grading request ID 36 processing is done, here are the results:
+PASS
+1 2 3 4 5 6 7 8 9 10 
+
+
+Received 'done' response.
+Response time: 5.4 seconds
