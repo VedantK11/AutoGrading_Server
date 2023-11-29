@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    
     // Read the content of the source code file
     std::ifstream sourceFile(sourceFileName);
     if (!sourceFile.is_open()) {
@@ -58,6 +59,15 @@ int main(int argc, char* argv[]) {
 
     std::string sourceCodeContent((std::istreambuf_iterator<char>(sourceFile)),
                                    std::istreambuf_iterator<char>());
+
+    ssize_t fileSize=sourceCodeContent.size();
+
+    // Send the source code file size to the server
+    send(clientSocket, fileSize, sizeof(fileSize), 0);
+
+    std::string buffer;
+    
+    recv(clientSocket, buffer,buffer.size() 0);
 
     // Send the source code content to the server
     send(clientSocket, sourceCodeContent.c_str(), sourceCodeContent.size(), 0);

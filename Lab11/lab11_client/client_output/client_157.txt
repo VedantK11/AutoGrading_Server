@@ -1,0 +1,18 @@
+Submitting new request...
+Received request ID: 874
+874
+Your grading request ID 874 has been accepted. It is currently in the queue.
+
+Attempt 1: Status not done yet. Polling again after 2 seconds...
+874
+Your grading request ID 874 has been accepted and is currently being processed.
+
+Attempt 2: Status not done yet. Polling again after 2 seconds...
+874
+Your grading request ID 874 processing is done, here are the results:
+PASS
+1 2 3 4 5 6 7 8 9 10 
+
+
+Received 'done' response.
+Response time: 16.24 seconds

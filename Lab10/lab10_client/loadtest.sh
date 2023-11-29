@@ -61,6 +61,10 @@ mkdir -p "$outputDir"
 #     wait ${pids[i]}
 # done
 
+vmstat 1 $((loopNum + 1)) > "$outputDir/vmstat.log" &
+#vmstat 10 > "$outputDir/vmstat.log" &
+vmstat_pid=$!
+
 # Launch multiple clients
 for ((i = 1; i <= $numClients; i++)); do
     # client_pid=$(execute_client $i)
@@ -68,7 +72,7 @@ for ((i = 1; i <= $numClients; i++)); do
     output_file="$outputDir/client_$client_num_$i.txt"
      python3 clientPolling.py $serverIPPort $sourceCodeFile $pollingInterval  > $output_file &
     pids[${i}]=$! # Store the PID of each background job
-    echo $pids[${i}]
+    # echo $pids[${i}]
 done
 
 for ((i = 1; i <= $numClients; i++)); do
@@ -79,6 +83,32 @@ done
 # for pid in "${client_pids[@]}"; do
 #     wait $pid
 # done
+
+# Wait for vmstat to finish and collect data
+wait $vmstat_pid
+
+# Parse vmstat output and calculate CPU utilization
+vmstat_file="$outputDir/vmstat.log"
+lines=0
+while read -r line; do
+    if [[ "$line" =~ ^[0-9]+ ]]; then
+    	let lines=lines+1
+    	if [[ $lines -ne 1 ]]; then
+		idle=$(echo "$line" | awk '{print $15}')
+		totalIdle=$((totalIdle + idle))
+	fi
+    fi
+done < "$vmstat_file"
+
+let lines=lines-1
+if [[ $lines -eq 0 ]]; then
+    averageIdle=$(($totalIdle ))
+else
+    averageIdle=$(($totalIdle / lines))
+fi
+# Calculate average CPU utilization
+# averageIdle=$(($totalIdle / lines))
+averageCPU=$(echo "100 - $averageIdle" | bc)
 
 # Calculate average response time
 for ((i = 1; i <= $numClients; i++)); do
@@ -93,6 +123,7 @@ for ((i = 1; i <= $numClients; i++)); do
     response_times+=($response_time)
 done
 
+
 # Calculate average response time
 average_time=0
 for time in "${response_times[@]}"; do
@@ -105,5 +136,7 @@ for throughput in "${throughputs[@]}"; do
     total_throughput=$(awk "BEGIN {print $total_throughput + $throughput}")
 done
 
-echo "Average Response Time Across $numClients Clients: $average_time seconds"
+echo "Average Response Time Across $numClients Clients: $average_time"
 echo "Overall Throughput Across $numClients Clients: $total_throughput"
+echo "Overall CPU Utilization: $averageCPU%"
+

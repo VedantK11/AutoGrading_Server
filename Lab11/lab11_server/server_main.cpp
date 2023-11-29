@@ -14,6 +14,8 @@
 #include <random>
 #include <unordered_map>
 #include<mutex>
+#include <sys/resource.h>
+
 
 #include "server_main.h"
 
@@ -81,6 +83,7 @@ bool readConfig(const std::string &configFile)
 int main(int argc, char *argv[])
 {
 
+
     if (argc != 4)
     {
         std::cerr << "Usage: " << argv[0] << " <port> <thread_pool_size>  <config_file>" << std::endl;
@@ -94,7 +97,16 @@ int main(int argc, char *argv[])
 
 
     thread_pool_size=MAX_THREADS>thread_pool_size?thread_pool_size:MAX_THREADS;
+    std::cout<<"thread_pool_size: "<<thread_pool_size<<std::endl;
+    std::cout<<MAX_THREADS<<std::endl;
     pthread_t threads[thread_pool_size];
+
+
+    struct rlimit memoryLimit;
+    memoryLimit.rlim_cur = 1500* 1024 * 1024; // 100MB soft limit
+    memoryLimit.rlim_max = 2000 * 1024 * 1024; // 150MB hard limit
+    // setrlimit(RLIMIT_AS, &memoryLimit);
+    prlimit(getpid(), RLIMIT_AS, &memoryLimit, NULL);
 
     // Create worker threads
     for (int i = 0; i < thread_pool_size; i++)

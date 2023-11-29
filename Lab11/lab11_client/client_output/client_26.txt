@@ -1,2 +1,10 @@
 Submitting new request...
-Error.Request not accepted
+Received request ID: 756
+756
+Your grading request ID 756 processing is done, here are the results:
+PASS
+1 2 3 4 5 6 7 8 9 10 
+
+
+Received 'done' response.
+Response time: 9.14 seconds

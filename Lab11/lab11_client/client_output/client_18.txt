@@ -1,2 +1,13 @@
 Submitting new request...
-Error.Request not accepted
+Received request ID: 721
+721
+
+Attempt 1: Status not done yet. Polling again after 2 seconds...
+721
+Your grading request ID 721 processing is done, here are the results:
+PASS
+1 2 3 4 5 6 7 8 9 10 
+
+
+Received 'done' response.
+Response time: 11.66 seconds
