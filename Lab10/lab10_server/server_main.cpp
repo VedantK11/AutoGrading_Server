@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
             const int bufferSize = 1024;
             char buf[bufferSize];
             size_t remainingBytes = fileSize;
-
+            pthread_mutex_lock(&fileMutex);
             while (remainingBytes > 0)
             {
                 int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
             }
 
             outputFile.close();
-
+            pthread_mutex_lock(&fileMutex);
             // send(clientSocket, "Send the file", sizeof("Send the file"), 0);
 
             // Enqueue the request in the shared queue
@@ -284,6 +284,7 @@ int main(int argc, char *argv[])
         //     pthread_cond_signal(&queueNotEmpty);
         // }
         pthread_cond_signal(&queueNotEmpty);
+        close(clientSocket);
     }
     close(serverSocket);
     return 0;

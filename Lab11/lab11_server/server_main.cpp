@@ -237,12 +237,12 @@ int main(int argc, char *argv[])
                 close(clientSocket);
                 continue;;
             }
-
+            pthread_mutex_lock(&fileMutex);
             const int bufferSize = 1024;
             char buf[bufferSize];
             size_t remainingBytes = fileSize;
             ssize_t bytesRead=0;
-
+            
             while (remainingBytes > 0)
             {
                 int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
@@ -252,13 +252,13 @@ int main(int argc, char *argv[])
                     std::cerr << "Error receiving data" << std::endl;
                     break;
                 }
-
                 outputFile.write(buf, bytesReceived);
                 bytesRead+=bytesReceived;
                 remainingBytes -= bytesReceived;
             }
 
             outputFile.close();
+            pthread_mutex_unlock(&fileMutex);
             // Check file size before saving
             if (bytesRead <= FILE_SIZE_LIMIT)
             {
