@@ -197,38 +197,81 @@ int main(int argc, char *argv[])
         {
             // std::cout<<"***************in new*****************"<<std::endl;
             
-            send(clientSocket,"Send the file",sizeof("Send the file"),0);
-            
-            // Enqueue the request in the shared queue
+            send(clientSocket, "Send the file size", sizeof("Send the file size"), 0);
+
+            size_t fileSize;
+            ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+            if (sizeReceived != sizeof(fileSize))
+            {
+                std::cerr << "Error receiving file size" << std::endl;
+                send(clientSocket, "Error receiving file size", sizeof("Error receiving file size"), 0);
+                close(clientSocket);
+                continue;
+            }
+            else
+            {
+                send(clientSocket, "Send the file", sizeof("Send the file"), 0);
+            }
+
+            // recieve file
             ThreadData threadData;
             // threadData.clientSocket = clientSocket;
             threadData.requestID = generateRequestID();
             threadData.folderName = threadData.requestID;
 
+            std::string file;
+            std::string folder = "mkdir " + threadData.folderName;
+            system(folder.c_str());
+            file = threadData.folderName + "/" + threadData.requestID + ".cpp";
+
             // Add the request ID entry in the table with initial state 'W'
             pthread_mutex_lock(&queueMutex);
             requestStates[threadData.requestID] = 'W';
             pthread_mutex_unlock(&queueMutex);
-            // std::cout<<"***************File not recv *****************"<<std::endl;
-            
-            // Receive and save the file with the request ID as its name
-            char buffer[2048];
-            memset(buffer, 0, sizeof(buffer));
-            ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-            
+
+            std::ofstream outputFile(file.c_str());
+            if (!outputFile.is_open())
+            {
+                std::cerr << "Error opening file for writing." << std::endl;
+                close(clientSocket);
+                continue;;
+            }
+
+            const int bufferSize = 1024;
+            char buf[bufferSize];
+            size_t remainingBytes = fileSize;
+            ssize_t bytesRead=0;
+
+            while (remainingBytes > 0)
+            {
+                int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
+
+                if (bytesReceived <= 0)
+                {
+                    std::cerr << "Error receiving data" << std::endl;
+                    break;
+                }
+
+                outputFile.write(buf, bytesReceived);
+                bytesRead+=bytesReceived;
+                remainingBytes -= bytesReceived;
+            }
+
+            outputFile.close();
             // Check file size before saving
             if (bytesRead <= FILE_SIZE_LIMIT)
             {
-                std::string file;
-                std::string folder = "mkdir " + threadData.folderName;
-                system(folder.c_str());
-                file = threadData.folderName + "/" + threadData.requestID + ".cpp";
+                // std::string file;
+                // std::string folder = "mkdir " + threadData.folderName;
+                // system(folder.c_str());
+                // file = threadData.folderName + "/" + threadData.requestID + ".cpp";
 
-                pthread_mutex_lock(&fileMutex);
-                std::ofstream sourceCodeFile(file);
-                sourceCodeFile << buffer;
-                sourceCodeFile.close();
-                pthread_mutex_unlock(&fileMutex);
+                // pthread_mutex_lock(&fileMutex);
+                // std::ofstream sourceCodeFile(file);
+                // sourceCodeFile << buffer;
+                // sourceCodeFile.close();
+                // pthread_mutex_unlock(&fileMutex);
 
                 msg = "Your request is accepted and is being processed for grading. Request Id is: " + threadData.requestID;
                 send(clientSocket, msg.c_str(), msg.size(), 0);
@@ -244,6 +287,9 @@ int main(int argc, char *argv[])
                 // File size exceeds the limit, notify the client
                 msg = "Error: File size exceeds the limit.";
                 send(clientSocket, msg.c_str(), msg.size(), 0);
+                std::string folderdelete="rm -r " +threadData.folderName;
+                system(folderdelete.c_str());
+                requestStates.erase(threadData.requestID);
             }
 
             

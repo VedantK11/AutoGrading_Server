@@ -63,11 +63,11 @@ int main(int argc, char* argv[]) {
     ssize_t fileSize=sourceCodeContent.size();
 
     // Send the source code file size to the server
-    send(clientSocket, fileSize, sizeof(fileSize), 0);
+    send(clientSocket, &fileSize, sizeof(fileSize), 0);
 
-    std::string buffer;
+    char message[50];
     
-    recv(clientSocket, buffer,buffer.size() 0);
+    recv(clientSocket, message,sizeof(message), 0);
 
     // Send the source code content to the server
     send(clientSocket, sourceCodeContent.c_str(), sourceCodeContent.size(), 0);

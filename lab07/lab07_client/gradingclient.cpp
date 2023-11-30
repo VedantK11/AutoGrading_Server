@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     int successfulResponses = 0;
 
     // Measure the time just before sending the request (Tsend)
-    struct timeval start, end,response_start,response_end;
+    struct timeval start, end, response_start, response_end;
     gettimeofday(&start, NULL);
 
     // Perform the request-response loop
@@ -80,9 +80,19 @@ int main(int argc, char *argv[])
             close(clientSocket);
             continue;
         }
-        // Send the source code content to the server
-        gettimeofday(&response_start,NULL);
+        
 
+        ssize_t fileSize = sourceCodeContent.size();
+
+        // Send the source code file size to the server
+        send(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+        char message[50];
+
+        recv(clientSocket, message, sizeof(message), 0);
+
+        // Send the source code content to the server
+        gettimeofday(&response_start, NULL);
         send(clientSocket, sourceCodeContent.c_str(), sourceCodeContent.size(), 0);
 
         // Receive and display the server response
@@ -110,25 +120,23 @@ int main(int argc, char *argv[])
 
     // Measure the time just after getting the response (Trecv)
     gettimeofday(&end, NULL);
-     totalTime = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+    totalTime = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 
     if (successfulResponses == 0)
     {
         std::cout << "Average Response Time: " << (successful_totalTime) << " seconds" << std::endl;
         std::cout << "Number of Successful Responses: " << successfulResponses << std::endl;
         std::cout << "Total time of the client: " << totalTime << " seconds" << std::endl;
-        std::cout << "Throughput: " << successfulResponses << " requests/second" <<std::endl;
-
+        std::cout << "Throughput: " << successfulResponses << " requests/second" << std::endl;
     }
     else
     {
         std::cout << "Average Response Time: " << (successful_totalTime / successfulResponses) << " seconds" << std::endl;
         std::cout << "Number of Successful Responses: " << successfulResponses << std::endl;
         std::cout << "Total time of the client: " << totalTime << " seconds" << std::endl;
-        std::cout << "Throughput: " << successfulResponses/totalTime << " requests/second" <<std::endl;
-
+        std::cout << "Throughput: " << successfulResponses / totalTime << " requests/second" << std::endl;
     }
-   
+
     // close(clientSocket);
     return 0;
 }

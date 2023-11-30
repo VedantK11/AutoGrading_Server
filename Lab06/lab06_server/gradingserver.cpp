@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        //code for receiving file from client
+        //****code for receiving file from client*****
 
         //create tempfile name
         std::string tempFileName = "temp_source.cpp";
@@ -138,21 +138,21 @@ int main(int argc, char *argv[])
             std::cerr << "Error receiving file size" << std::endl;
             send(clientSocket, "Error receiving file size", sizeof("Error receiving file size"), 0);
             close(clientSocket);
-            return;
+            return 1;
         }
         else{
-            send(clientSocket, "Send the file", sizeof("Send the"), 0);
+            send(clientSocket, "Send the file", sizeof("Send the file"), 0);
         }
 
         
         // recieve file
 
-        std::ofstream outputFile(tempfileName, std::ios::app);
+        std::ofstream outputFile(tempFileName);
         if (!outputFile.is_open())
         {
             std::cerr << "Error opening file for writing." << std::endl;
             close(clientSocket);
-            return;
+            return 1;
         }
 
         const int bufferSize = 1024;

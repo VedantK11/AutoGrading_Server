@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     if (operation == "new")
     {
 
-        // Send the operation type to the server
+        /// Send the operation type to the server
         send(clientSocket, operation.c_str(), operation.size(), 0);
         std::cout << operation << std::endl;
         char serverMsg[1024];
@@ -77,6 +77,15 @@ int main(int argc, char *argv[])
 
         std::string sourceCodeContent((std::istreambuf_iterator<char>(sourceFile)),
                                       std::istreambuf_iterator<char>());
+
+        ssize_t fileSize = sourceCodeContent.size();
+
+        // Send the source code file size to the server
+        send(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+        char message[50];
+
+        recv(clientSocket, message, sizeof(message), 0);
 
         // Send the source code content to the server
         send(clientSocket, sourceCodeContent.c_str(), sourceCodeContent.size(), 0);

@@ -13,7 +13,7 @@
 #include <chrono>
 #include <random>
 #include <unordered_map>
-#include<mutex>
+#include <mutex>
 
 #include "server_main.h"
 
@@ -22,9 +22,9 @@ pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queueNotEmpty = PTHREAD_COND_INITIALIZER;
 
-//variable to generate unique request ID
+// variable to generate unique request ID
 std::mutex countMutex;
-long int count=0;
+long int count = 0;
 
 std::queue<ThreadData> requestQueue;
 std::unordered_map<std::string, char> requestStates; // char: 'W', 'P', or 'C'
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         }
     }
 
-     // Load the previous requests and their state from the file
+    // Load the previous requests and their state from the file
     loadStateFromFile();
 
     // Create a thread to calculate and display the average
@@ -79,8 +79,6 @@ int main(int argc, char *argv[])
         std::cerr << "Failed to create the average thread." << std::endl;
         return 1;
     }
-
-   
 
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
@@ -120,48 +118,101 @@ int main(int argc, char *argv[])
 
         // Read the operation type from the client (new or status)
         char operation[10];
-        memset(operation,0,sizeof(operation));
+        memset(operation, 0, sizeof(operation));
         recv(clientSocket, operation, sizeof(operation), 0);
         // std::cout<<operation<<std::endl;
 
-        if (strncmp(operation, "new",3) == 0)
+        if (strncmp(operation, "new", 3) == 0)
         {
             // std::cout<<"***************in new*****************"<<std::endl;
-            
-            send(clientSocket,"Send the file",sizeof("Send the file"),0);
-            
-            // Enqueue the request in the shared queue
+
+            send(clientSocket, "Send the file size", sizeof("Send the file size"), 0);
+
+            size_t fileSize;
+            ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+            if (sizeReceived != sizeof(fileSize))
+            {
+                std::cerr << "Error receiving file size" << std::endl;
+                send(clientSocket, "Error receiving file size", sizeof("Error receiving file size"), 0);
+                close(clientSocket);
+                continue;
+            }
+            else
+            {
+                send(clientSocket, "Send the file", sizeof("Send the file"), 0);
+            }
+
+            // recieve file
             ThreadData threadData;
             // threadData.clientSocket = clientSocket;
             threadData.requestID = generateRequestID();
             threadData.folderName = threadData.requestID;
 
+            std::string file;
+            std::string folder = "mkdir " + threadData.folderName;
+            system(folder.c_str());
+            file = threadData.folderName + "/" + threadData.requestID + ".cpp";
+
             // Add the request ID entry in the table with initial state 'W'
             pthread_mutex_lock(&queueMutex);
             requestStates[threadData.requestID] = 'W';
             pthread_mutex_unlock(&queueMutex);
-            // std::cout<<"***************File not recv *****************"<<std::endl;
-            
-            // Receive and save the file with the request ID as its name
-            char buffer[1024];
-            memset(buffer, 0, sizeof(buffer));
-            ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-            // std::cout << "File received for grading\n";
-        
-            std::string file;
-            std::string folder="mkdir "+threadData.folderName;
-            system(folder.c_str());
-            file = threadData.folderName + "/" + threadData.requestID + ".cpp";
-            pthread_mutex_lock(&fileMutex);
-            std::ofstream sourceCodeFile(file);
-            // std::cout<<"***************File recv *****************"<<std::endl;
-            // sourceCodeFile.write(buffer, bytesRead);
-            // std::cout<<"++++++"<<buffer<<"++++"<<std::endl;
-            sourceCodeFile<<buffer;
-            sourceCodeFile.close();
-            pthread_mutex_unlock(&fileMutex);
 
-            msg = "Your request is accepted and is being processed for grading. Request Id is: "+threadData.requestID ;
+            std::ofstream outputFile(file.c_str());
+            if (!outputFile.is_open())
+            {
+                std::cerr << "Error opening file for writing." << std::endl;
+                close(clientSocket);
+                continue;;
+            }
+
+            const int bufferSize = 1024;
+            char buf[bufferSize];
+            size_t remainingBytes = fileSize;
+
+            while (remainingBytes > 0)
+            {
+                int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
+
+                if (bytesReceived <= 0)
+                {
+                    std::cerr << "Error receiving data" << std::endl;
+                    break;
+                }
+
+                outputFile.write(buf, bytesReceived);
+                remainingBytes -= bytesReceived;
+            }
+
+            outputFile.close();
+
+            // send(clientSocket, "Send the file", sizeof("Send the file"), 0);
+
+            // Enqueue the request in the shared queue
+            
+            // std::cout<<"***************File not recv *****************"<<std::endl;
+
+            // Receive and save the file with the request ID as its name
+            // char buffer[1024];
+            // memset(buffer, 0, sizeof(buffer));
+            // ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+            // std::cout << "File received for grading\n";
+
+            // std::string file;
+            // std::string folder = "mkdir " + threadData.folderName;
+            // system(folder.c_str());
+            // file = threadData.folderName + "/" + threadData.requestID + ".cpp";
+            // pthread_mutex_lock(&fileMutex);
+            // std::ofstream sourceCodeFile(file);
+            // // std::cout<<"***************File recv *****************"<<std::endl;
+            // // sourceCodeFile.write(buffer, bytesRead);
+            // // std::cout<<"++++++"<<buffer<<"++++"<<std::endl;
+            // sourceCodeFile << buffer;
+            // sourceCodeFile.close();
+            // pthread_mutex_unlock(&fileMutex);
+
+            msg = "Your request is accepted and is being processed for grading. Request Id is: " + threadData.requestID;
             send(clientSocket, msg.c_str(), msg.size(), 0);
 
             // Enqueue the request in the shared queue
@@ -172,15 +223,15 @@ int main(int argc, char *argv[])
 
             // Notify one of the worker threads to pick up the request
         }
-        else if (strncmp(operation, "status",6) == 0)
+        else if (strncmp(operation, "status", 6) == 0)
         {
             // std::cout<<"#################In status################"<<std::endl;
-            send(clientSocket,"Send the requestId",sizeof("Send the requestId"),0);
+            send(clientSocket, "Send the requestId", sizeof("Send the requestId"), 0);
             //  std::cout<<"#################asked for request Id################"<<std::endl;
 
             // Read the Reqeust Id from the client
             char buffer[1024];
-            memset(buffer,0,sizeof(buffer));
+            memset(buffer, 0, sizeof(buffer));
             recv(clientSocket, buffer, sizeof(buffer), 0);
             std::string requestID = std::string(buffer);
             // std::cout<<requestID<<std::endl;
@@ -202,7 +253,7 @@ int main(int argc, char *argv[])
                     send(clientSocket, msg.c_str(), msg.size(), 0);
 
                     // Remove the entry from the table and delete the table
-                    std::string folderdelete="rm -r " +stateIter->first;
+                    std::string folderdelete = "rm -r " + stateIter->first;
                     system(folderdelete.c_str());
                     requestStates.erase(stateIter);
                 }
@@ -225,7 +276,6 @@ int main(int argc, char *argv[])
                 send(clientSocket, msg.c_str(), msg.size(), 0);
             }
             // std::cout<<"################# status Gaya################"<<std::endl;
-
         }
 
         // Notify one of the worker threads to pick up the request
@@ -233,9 +283,8 @@ int main(int argc, char *argv[])
         // {
         //     pthread_cond_signal(&queueNotEmpty);
         // }
-         pthread_cond_signal(&queueNotEmpty);
+        pthread_cond_signal(&queueNotEmpty);
     }
     close(serverSocket);
     return 0;
 }
-

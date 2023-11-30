@@ -108,26 +108,72 @@ int main(int argc, char* argv[]) {
         //while(true)
         //{
         // Receive client request (source code content)
-        char buffer[1024];
-        memset(buffer, 0, sizeof(buffer));
-        ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        // char buffer[1024];
+        // memset(buffer, 0, sizeof(buffer));
+        // ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
 
-        if (bytesRead <= 0) {
-            //close(clientSocket);
-            continue;
-        }
+        // if (bytesRead <= 0) {
+        //     //close(clientSocket);
+        //     continue;
+        // }
 
         // Create a temporary source code file
         std::string tempFileName = "temp_source.cpp";
-        std::ofstream tempFile(tempFileName);
-        if (!tempFile.is_open()) {
+        // std::ofstream tempFile(tempFileName);
+        // if (!tempFile.is_open()) {
+        //     close(clientSocket);
+        //     continue;
+        // }
+
+        // // Write the received source code content to the temporary file
+        // tempFile.write(buffer, bytesRead);
+        // tempFile.close();
+
+         //receive file size
+        size_t fileSize;
+        ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+        if (sizeReceived != sizeof(fileSize))
+        {
+            std::cerr << "Error receiving file size" << std::endl;
+            send(clientSocket, "Error receiving file size", sizeof("Error receiving file size"), 0);
             close(clientSocket);
-            continue;
+            return 1;
+        }
+        else{
+            send(clientSocket, "Send the file", sizeof("Send the file"), 0);
         }
 
-        // Write the received source code content to the temporary file
-        tempFile.write(buffer, bytesRead);
-        tempFile.close();
+        
+        // recieve file
+
+        std::ofstream outputFile(tempFileName);
+        if (!outputFile.is_open())
+        {
+            std::cerr << "Error opening file for writing." << std::endl;
+            close(clientSocket);
+            return 1;
+        }
+
+        const int bufferSize = 1024;
+        char buf[bufferSize];
+        size_t remainingBytes = fileSize;
+
+        while (remainingBytes > 0)
+        {
+            int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
+
+            if (bytesReceived <= 0)
+            {
+                std::cerr << "Error receiving data" << std::endl;
+                break;
+            }
+
+            outputFile.write(buf, bytesReceived);
+            remainingBytes -= bytesReceived;
+        }
+
+        outputFile.close();
 
         // Process the request (compile and run the temporary file)
         std::string response = compileAndRun(tempFileName.c_str());

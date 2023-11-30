@@ -2,7 +2,7 @@
 
 #include "server.h"
 #include "server_main.h"
-//#include "variable.h"
+// #include "variable.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,20 +17,21 @@
 #include <queue>
 
 // Define the maximum number of worker threads in the pool
-//std::queue<ThreadData> requestQueue;
-
-
+// std::queue<ThreadData> requestQueue;
 
 // Function for calculating and displaying the average
-void* calculateAverage(void* arg) {
-    while (true) {
-        
+void *calculateAverage(void *arg)
+{
+    while (true)
+    {
+
         // Calculate the average number of requests in the queue
-         if(requestQueue.size()!=0){
-         averageRequests+= requestQueue.size();
-       avgCount++;
-       
-        std::cout << "Average Requests in Queue: " << averageRequests /avgCount<< " requests" << std::endl;
+        if (requestQueue.size() != 0)
+        {
+            averageRequests += requestQueue.size();
+            avgCount++;
+
+            std::cout << "Average Requests in Queue: " << averageRequests / avgCount << " requests" << std::endl;
         }
 
         // Sleep for a while before recalculating the average
@@ -38,31 +39,36 @@ void* calculateAverage(void* arg) {
     }
 }
 
-
-
 // Function to compile and execute the source code
-std::string compileAndRun(const char* sourceFileName, const std::string& folder) {
+std::string compileAndRun(const char *sourceFileName, const std::string &folder)
+{
     std::string response;
 
     // Use the folder name in constructing file paths
     std::string compileCommand = "g++ -o " + folder + "/executable " + std::string(sourceFileName) + " > " + folder + "/compile_output.txt 2>&1";
     int compileExitCode = system(compileCommand.c_str());
 
-    if (compileExitCode != 0) {
+    if (compileExitCode != 0)
+    {
         std::ifstream compileOutputFile(folder + "/compile_output.txt");
         std::ostringstream compileOutputContent;
         compileOutputContent << compileOutputFile.rdbuf();
         response = "COMPILER ERROR\n" + compileOutputContent.str();
-    } else {
+    }
+    else
+    {
         // Execute the compiled program and capture both stdout and stderr
         int runExitCode = system((folder + "/executable > " + folder + "/program_output.txt 2>&1").c_str());
 
-        if (runExitCode != 0) {
+        if (runExitCode != 0)
+        {
             std::ifstream runOutputFile(folder + "/program_output.txt");
             std::ostringstream runOutputContent;
             runOutputContent << runOutputFile.rdbuf();
             response = "RUNTIME ERROR\n" + runOutputContent.str();
-        } else {
+        }
+        else
+        {
             // Program executed successfully, compare its output with the expected output
             std::ifstream programOutputFile(folder + "/program_output.txt");
             std::ostringstream programOutputContent;
@@ -74,9 +80,12 @@ std::string compileAndRun(const char* sourceFileName, const std::string& folder)
             expectedOutputContent << expectedOutputFile.rdbuf();
             std::string expectedOutput = expectedOutputContent.str();
 
-            if (programOutput == expectedOutput) {
+            if (programOutput == expectedOutput)
+            {
                 response = "PASS\n" + programOutput;
-            } else {
+            }
+            else
+            {
                 // Handle output error
                 std::ofstream programOutputFile(folder + "/program_output.txt");
                 programOutputFile << programOutput;
@@ -96,13 +105,16 @@ std::string compileAndRun(const char* sourceFileName, const std::string& folder)
 }
 
 // Function for handling a client connection
-void* handleClient(void* arg) {
-	while (true) {
+void *handleClient(void *arg)
+{
+    while (true)
+    {
         ThreadData threadData;
 
         // Dequeue a request from the shared queue
         pthread_mutex_lock(&queueMutex);
-        while (requestQueue.empty()) {
+        while (requestQueue.empty())
+        {
             pthread_cond_wait(&queueNotEmpty, &queueMutex);
         }
         threadData = requestQueue.front();
@@ -114,42 +126,85 @@ void* handleClient(void* arg) {
         // Process the request as before
 
         // ...
-        
-        //std::string folder = threadData.folderName + "_" + std::to_string(gettid());
-        std::string folder =  std::to_string(gettid());
-        
 
-       
+        // std::string folder = threadData.folderName + "_" + std::to_string(gettid());
+        std::string folder = std::to_string(gettid());
 
-    // Create the thread's folder
-    std::string cdfolder = "mkdir " + folder;
-    system(cdfolder.c_str());
-    std::cout<<folder<<" created."<<std::endl;
-    std::string cpfolder = "cp expected_output.txt " + folder + "/";
-    system(cpfolder.c_str());
+        // Create the thread's folder
+        std::string cdfolder = "mkdir " + folder;
+        system(cdfolder.c_str());
+        std::cout << folder << " created." << std::endl;
+        std::string cpfolder = "cp expected_output.txt " + folder + "/";
+        system(cpfolder.c_str());
 
-    // while (true) {
-        char buffer[1024];
-        memset(buffer, 0, sizeof(buffer));
-        ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        // while (true) {
+        // char buffer[1024];
+        // memset(buffer, 0, sizeof(buffer));
+        // ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
 
-        if (bytesRead <= 0) {
-            close(clientSocket);
-            // break;
-            continue;
-        }
+        // if (bytesRead <= 0)
+        // {
+        //     close(clientSocket);
+        //     // break;
+        //     continue;
+        // }
 
         // Create a temporary source code file in the thread's folder
         std::string tempFileName = folder + "/temp_source.cpp";
-        std::ofstream tempFile(tempFileName);
-        if (!tempFile.is_open()) {
+        // std::ofstream tempFile(tempFileName);
+        // if (!tempFile.is_open())
+        // {
+        //     close(clientSocket);
+        //     continue;
+        // }
+
+        // tempFile.write(buffer, bytesRead);
+        // tempFile.close();
+
+        size_t fileSize;
+        ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+        if (sizeReceived != sizeof(fileSize))
+        {
+            std::cerr << "Error receiving file size" << std::endl;
+            send(clientSocket, "Error receiving file size", sizeof("Error receiving file size"), 0);
             close(clientSocket);
-            continue;
+            return NULL;
+        }
+        else{
+            send(clientSocket, "Send the file", sizeof("Send the file"), 0);
         }
 
-        tempFile.write(buffer, bytesRead);
-        tempFile.close();
+        
+        // recieve file
 
+        std::ofstream outputFile(tempFileName);
+        if (!outputFile.is_open())
+        {
+            std::cerr << "Error opening file for writing." << std::endl;
+            close(clientSocket);
+            return NULL ;
+        }
+
+        const int bufferSize = 1024;
+        char buf[bufferSize];
+        size_t remainingBytes = fileSize;
+
+        while (remainingBytes > 0)
+        {
+            int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
+
+            if (bytesReceived <= 0)
+            {
+                std::cerr << "Error receiving data" << std::endl;
+                break;
+            }
+
+            outputFile.write(buf, bytesReceived);
+            remainingBytes -= bytesReceived;
+        }
+
+        outputFile.close();
         // Process the request (compile and run the temporary file)
         std::string response = compileAndRun(tempFileName.c_str(), folder);
 
@@ -158,19 +213,18 @@ void* handleClient(void* arg) {
 
         // Send the response back to the client
         send(clientSocket, response.c_str(), response.size(), 0);
-    // }
+        // }
 
-    close(clientSocket);
+        close(clientSocket);
 
-    // Remove the thread's folder
-    std::string dfolder = "rm -r " + folder;
-    system(dfolder.c_str());
-    std::cout<<folder<<" deleted."<<std::endl;
-   // return NULL;
+        // Remove the thread's folder
+        std::string dfolder = "rm -r " + folder;
+        system(dfolder.c_str());
+        std::cout << folder << " deleted." << std::endl;
+        // return NULL;
 
+        //   close(clientSocket);
+    }
 
-     //   close(clientSocket);
-     }
-        
-    //return NULL;
+    // return NULL;
 }

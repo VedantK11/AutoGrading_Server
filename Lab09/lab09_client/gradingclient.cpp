@@ -95,6 +95,15 @@ int main(int argc, char *argv[])
             errorRequests++;
             continue;
         }
+        ssize_t fileSize = sourceCodeContent.size();
+
+        // Send the source code file size to the server
+        send(clientSocket, &fileSize, sizeof(fileSize), 0);
+
+        char message[50];
+
+        recv(clientSocket, message, sizeof(message), 0);
+
 
         // Measure the time just before sending the request (Tsend)
         gettimeofday(&response_start, NULL);
