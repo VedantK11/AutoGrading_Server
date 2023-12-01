@@ -25,7 +25,7 @@ def calculate_response_time(start_time, end_time):
 print("Submitting new request...")
 start_time = get_timestamp()
 response = subprocess.check_output(["./client", "new", server_ip_port, source_code_file], text=True)
-request_id = response.split()[-1]
+request_id = response.split('\n')[-1]
 print(f"Received request ID: {request_id}")
 
 # Poll the server for status until "done" response or reaching max attempts

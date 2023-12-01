@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
             }
 
             outputFile.close();
-            pthread_mutex_lock(&fileMutex);
+            pthread_mutex_unlock(&fileMutex);
             // send(clientSocket, "Send the file", sizeof("Send the file"), 0);
 
             // Enqueue the request in the shared queue
