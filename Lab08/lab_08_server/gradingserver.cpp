@@ -18,7 +18,6 @@ struct ThreadData {
     int clientSocket;
     unsigned long threadId;
     std::string folderName;
-    // You can add more data if needed
 };
 
 // Function to compile and execute the source code
@@ -80,7 +79,6 @@ std::string compileAndRun(const char* sourceFileName, const std::string& folder)
 void* handleClient(void* arg) {
     ThreadData* threadData = (ThreadData*)arg;
     int clientSocket = threadData->clientSocket;
-    //std::string folder = threadData->folderName;
     std::string folder=std::to_string(threadData->threadId);
 
     // Create the thread's folder
@@ -89,25 +87,8 @@ void* handleClient(void* arg) {
     std::string cpfolder = "cp expected_output.txt " + folder + "/";
     system(cpfolder.c_str());
 
-   // while (true) {
-        // char buffer[1024];
-        // memset(buffer, 0, sizeof(buffer));
-        // ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-
-        // if (bytesRead <= 0) {
-        //     close(clientSocket);
-        // }
-
-        // Create a temporary source code file in the thread's folder
         std::string tempFileName = folder + "/temp_source.cpp";
-        // std::ofstream tempFile(tempFileName);
-        // if (!tempFile.is_open()) {
-        //     close(clientSocket);
-        // }
-
-        // tempFile.write(buffer, bytesRead);
-        // tempFile.close();
-
+       
          //receive file size
         size_t fileSize;
         ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
@@ -213,7 +194,6 @@ int main(int argc, char* argv[]) {
 
         ThreadData* threadData = (ThreadData*)malloc(sizeof(ThreadData));
         threadData->clientSocket = clientSocket;
-        //threadData->folderName = generateThreadFolderName();
 
         pthread_t thread;
         threadData->threadId = thread;

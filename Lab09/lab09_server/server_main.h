@@ -7,7 +7,7 @@ extern pthread_cond_t queueNotEmpty;
 struct ThreadData {
     int clientSocket;
     std::string folderName;
-    // You can add more data if needed
+
 };
 extern std::queue<ThreadData> requestQueue;
 

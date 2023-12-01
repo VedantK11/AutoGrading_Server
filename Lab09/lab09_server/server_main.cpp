@@ -1,4 +1,3 @@
-// server_main.cpp
 
 #include <iostream>
 #include <fstream>
@@ -89,12 +88,7 @@ int main(int argc, char* argv[]) {
 
         // Notify one of the worker threads to pick up the request
         pthread_cond_signal(&queueNotEmpty);
-        
-        //  pthread_mutex_lock(&queueMutex);
-        // while (requestQueue.size() >= thread_pool_size) {
-        //     pthread_cond_wait(&queueNotEmpty, &queueMutex);
-        // }
-        // pthread_mutex_unlock(&queueMutex);
+
     }
     
      for (int i = 0; i < thread_pool_size; i++) {

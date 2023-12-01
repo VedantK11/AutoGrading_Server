@@ -17,7 +17,7 @@
 
 #include "server_main.h"
 
-//  global variables
+//  global variables for the mutexes and condition variables
 pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queueNotEmpty = PTHREAD_COND_INITIALIZER;
@@ -73,12 +73,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Create a thread to save the request states to a file
     pthread_t requestStatesThread;
     if (pthread_create(&requestStatesThread, NULL, saveStateToFile, NULL) != 0)
     {
         std::cerr << "Failed to create the average thread." << std::endl;
         return 1;
     }
+
 
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
@@ -120,14 +122,13 @@ int main(int argc, char *argv[])
         char operation[10];
         memset(operation, 0, sizeof(operation));
         recv(clientSocket, operation, sizeof(operation), 0);
-        // std::cout<<operation<<std::endl;
 
         if (strncmp(operation, "new", 3) == 0)
         {
-            // std::cout<<"***************in new*****************"<<std::endl;
-
+            
             send(clientSocket, "Send the file size", sizeof("Send the file size"), 0);
 
+            // Read the file size from the client
             size_t fileSize;
             ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
 
@@ -143,9 +144,8 @@ int main(int argc, char *argv[])
                 send(clientSocket, "Send the file", sizeof("Send the file"), 0);
             }
 
-            // recieve file
+            // generate request id and create a folder with that name
             ThreadData threadData;
-            // threadData.clientSocket = clientSocket;
             threadData.requestID = generateRequestID();
             threadData.folderName = threadData.requestID;
 
@@ -186,32 +186,9 @@ int main(int argc, char *argv[])
             }
 
             outputFile.close();
-            pthread_mutex_unlock(&fileMutex);
-            // send(clientSocket, "Send the file", sizeof("Send the file"), 0);
-
-            // Enqueue the request in the shared queue
-            
-            // std::cout<<"***************File not recv *****************"<<std::endl;
-
-            // Receive and save the file with the request ID as its name
-            // char buffer[1024];
-            // memset(buffer, 0, sizeof(buffer));
-            // ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-            // std::cout << "File received for grading\n";
-
-            // std::string file;
-            // std::string folder = "mkdir " + threadData.folderName;
-            // system(folder.c_str());
-            // file = threadData.folderName + "/" + threadData.requestID + ".cpp";
-            // pthread_mutex_lock(&fileMutex);
-            // std::ofstream sourceCodeFile(file);
-            // // std::cout<<"***************File recv *****************"<<std::endl;
-            // // sourceCodeFile.write(buffer, bytesRead);
-            // // std::cout<<"++++++"<<buffer<<"++++"<<std::endl;
-            // sourceCodeFile << buffer;
-            // sourceCodeFile.close();
-            // pthread_mutex_unlock(&fileMutex);
-
+            pthread_mutex_lock(&fileMutex);
+    
+            // Send the appropriate message to the client with reequest ID
             msg = "Your request is accepted and is being processed for grading. Request Id is: " + threadData.requestID;
             send(clientSocket, msg.c_str(), msg.size(), 0);
 
@@ -219,22 +196,17 @@ int main(int argc, char *argv[])
             pthread_mutex_lock(&queueMutex);
             requestQueue.push(threadData);
             pthread_mutex_unlock(&queueMutex);
-            // std::cout<<"***************new req responded *****************"<<std::endl;
-
-            // Notify one of the worker threads to pick up the request
         }
         else if (strncmp(operation, "status", 6) == 0)
         {
-            // std::cout<<"#################In status################"<<std::endl;
+            
             send(clientSocket, "Send the requestId", sizeof("Send the requestId"), 0);
-            //  std::cout<<"#################asked for request Id################"<<std::endl;
 
             // Read the Reqeust Id from the client
             char buffer[1024];
             memset(buffer, 0, sizeof(buffer));
             recv(clientSocket, buffer, sizeof(buffer), 0);
             std::string requestID = std::string(buffer);
-            // std::cout<<requestID<<std::endl;
             auto stateIter = requestStates.find(requestID);
             if (stateIter != requestStates.end())
             {
@@ -259,12 +231,13 @@ int main(int argc, char *argv[])
                 }
                 else if (state == 'W')
                 {
-                    // Send the appropriate message based on the state
+                    // Send the appropriate message based on the state 
                     msg = "Your grading request ID " + stateIter->first + " has been accepted. It is currently in the queue.";
                     send(clientSocket, msg.c_str(), msg.size(), 0);
                 }
                 else if (state == 'P')
                 {
+                    // Send the appropriate message based on the state 
                     msg = "Your grading request ID " + stateIter->first + " has been accepted and is currently being processed.";
                     send(clientSocket, msg.c_str(), msg.size(), 0);
                 }
@@ -275,14 +248,9 @@ int main(int argc, char *argv[])
                 msg = "Your grading request ID " + requestID + " not found. Please check and resend your request ID or re-send your original grading request.";
                 send(clientSocket, msg.c_str(), msg.size(), 0);
             }
-            // std::cout<<"################# status Gaya################"<<std::endl;
         }
 
-        // Notify one of the worker threads to pick up the request
-        // if (requestQueue.size() <= thread_pool_size)
-        // {
-        //     pthread_cond_signal(&queueNotEmpty);
-        // }
+        // Signal the worker threads that the queue is not empty
         pthread_cond_signal(&queueNotEmpty);
         close(clientSocket);
     }

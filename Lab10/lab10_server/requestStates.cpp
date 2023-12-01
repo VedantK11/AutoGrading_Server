@@ -17,6 +17,7 @@
 
 #include "server_main.h"
 
+//save the request states in a secondary storage
 void *saveStateToFile(void *arg) {
     while (true)
     {
@@ -30,7 +31,7 @@ void *saveStateToFile(void *arg) {
     
 }
 
-// Function to load the requestStates map from a file
+// Function to load the requestStates map from a secondary storage
 void loadStateFromFile() {
     std::ifstream stateFile("requestStates.csv");
     if (stateFile.is_open()) {

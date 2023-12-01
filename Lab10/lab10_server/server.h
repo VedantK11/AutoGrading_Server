@@ -3,7 +3,6 @@
 #include <string>
 #include <queue>
 
-// pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Variable to store the start time
 int avgCount=0;

@@ -78,25 +78,3 @@ plt.savefig("performance_metrics_plot_test.png")
 
 # Display the plots
 # plt.show()
-
-
-# import matplotlib.pyplot as plt
-
-# # Data
-# num_clients = [10, 20, 40, 80, 100, 200, 300, 400]
-# cpu_utilization = [60, 100, 100, 100, 100, 100, 100, 100]
-
-# # Plotting
-# plt.figure(figsize=(10, 6))
-# plt.plot(num_clients, cpu_utilization, marker='o', linestyle='-', color='b', label='CPU Utilization')
-
-# # Customize the plot
-# plt.title('CPU Utilization vs. Number of Clients')
-# plt.xlabel('Number of Clients')
-# plt.ylabel('CPU Utilization (%)')
-# plt.grid(True)
-# plt.legend()
-
-# # Show the plot
-# plt.savefig('cpu_utilisation.png')
-# plt.show()

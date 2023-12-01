@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include <queue>
 
-// Function for calculating and displaying the average
+// Function for calculating and displaying the average number of requests in the queue
 void* calculateAverageRequests(void* arg) {
     while (true) {
         
@@ -27,7 +27,7 @@ void* calculateAverageRequests(void* arg) {
         }
 
         // Sleep for a while before recalculating the average
-        sleep(0.05); // Adjust the sleep duration as needed
+        sleep(0.05); // 50 milliseconds
     }
 }
 
@@ -37,7 +37,7 @@ std::string compileAndRun(const char *sourceFileName, const std::string &folder)
 {
     std::string response;
 
-    // Use the folder name in constructing file paths
+    // compiling the source code
     std::string compileCommand = "g++ -o " + folder + "/executable " +folder +"/"+ std::string(sourceFileName) + " > " + folder + "/compile_output.txt 2>&1";
     int compileExitCode = system(compileCommand.c_str());
 
@@ -97,7 +97,7 @@ std::string compileAndRun(const char *sourceFileName, const std::string &folder)
     return response;
 }
 
-// Function for handling a client connection
+// Function for a thread to handle a client request
 void *handleClient(void *arg)
 {
     while (true)
@@ -116,7 +116,6 @@ void *handleClient(void *arg)
 
         requestStates[threadData.requestID] = 'P';
 
-        // std::string folder = std::to_string(gettid());
 
         std::string cpfolder = "cp expected_output.txt " + threadData.folderName + "/";
         system(cpfolder.c_str());

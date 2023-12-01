@@ -51,40 +51,21 @@ throughputs=()
 outputDir="client_output"
 mkdir -p "$outputDir"
 
-# Start clients in the background and store their PIDs
-# for ((i = 1; i <= numClients; i++)); do
-#     ./clientpolling.sh $serverIPPort $sourceCodeFile $pollingInterval $maxAttempts > "$outputDir/client_$i.txt" &
-#      pids[${i}]=$! # Store the PID of each background job
-# done
-
-# for ((i = 1; i <= numClients; i++)); do
-#     wait ${pids[i]}
-# done
-
 vmstat 1 $((loopNum + 1)) > "$outputDir/vmstat.log" &
 #vmstat 10 > "$outputDir/vmstat.log" &
 vmstat_pid=$!
 
 # Launch multiple clients
 for ((i = 1; i <= $numClients; i++)); do
-    # client_pid=$(execute_client $i)
-    # client_pids+=("$client_pid")
     output_file="$outputDir/client_$client_num_$i.txt"
      python3 clientPolling.py $serverIPPort $sourceCodeFile $pollingInterval  > $output_file &
     pids[${i}]=$! # Store the PID of each background job
-    # echo $pids[${i}]
 done
 
 for ((i = 1; i <= $numClients; i++)); do
     wait ${pids[i]}
 done
 
-# Wait for all clients to finish
-# for pid in "${client_pids[@]}"; do
-#     wait $pid
-# done
-
-# Wait for vmstat to finish and collect data
 wait $vmstat_pid
 
 # Parse vmstat output and calculate CPU utilization
@@ -106,8 +87,6 @@ if [[ $lines -eq 0 ]]; then
 else
     averageIdle=$(($totalIdle / lines))
 fi
-# Calculate average CPU utilization
-# averageIdle=$(($totalIdle / lines))
 averageCPU=$(echo "100 - $averageIdle" | bc)
 
 # Calculate average response time

@@ -16,7 +16,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-// Function for calculating and displaying the average
+// Function for calculating and displaying the average number of requests in the queue
 void *calculateAverageRequests(void *arg)
 {
     while (true)
@@ -32,98 +32,14 @@ void *calculateAverageRequests(void *arg)
         }
 
         // Sleep for a while before recalculating the average
-        sleep(0.05); // Adjust the sleep duration as needed
+        sleep(0.05); // 50 milliseconds
     }
 }
 
-// Function to compile and execute the source code
-// std::string compileAndRun(const char *sourceFileName, const std::string &folder)
-// {
-//     // Set the time limit for compilation & execution task of student code
-//     // struct rlimit cpuLimit;
-
-//     // cpuLimit.rlim_cur = 10; // 10 seconds time limit
-//     // cpuLimit.rlim_max = 15; // 15 seconds hard limit
-   
-//     // prlimit(getpid(), RLIMIT_CPU, &cpuLimit, NULL);
-
-//     struct rlimit cpuLimit;
-//     cpuLimit.rlim_cur = 10;
-//     cpuLimit.rlim_max = 15;
-
-//     setrlimit(RLIMIT_CPU, &cpuLimit);
-
-//     std::string response;
-
-//     // Use the folder name in constructing file paths
-//     std::string compileCommand = "g++ -o " + folder + "/executable " + folder + "/" + std::string(sourceFileName) + " > " + folder + "/compile_output.txt 2>&1";
-//     int compileExitCode = system(compileCommand.c_str());
-
-//     if (compileExitCode != 0)
-//     {
-//         std::ifstream compileOutputFile(folder + "/compile_output.txt");
-//         std::ostringstream compileOutputContent;
-//         compileOutputContent << compileOutputFile.rdbuf();
-//         response = "COMPILER ERROR\n" + compileOutputContent.str();
-//     }
-//     else
-//     {
-//         // Execute the compiled program and capture both stdout and stderr
-//         int runExitCode = system((folder + "/executable > " + folder + "/program_output.txt 2>&1").c_str());
-
-//         if (runExitCode != 0)
-//         {
-//             std::ifstream runOutputFile(folder + "/program_output.txt");
-//             std::ostringstream runOutputContent;
-//             runOutputContent << runOutputFile.rdbuf();
-//             response = "RUNTIME ERROR\n" + runOutputContent.str();
-//         }
-//         else
-//         {
-//             // Program executed successfully, compare its output with the expected output
-//             std::ifstream programOutputFile(folder + "/program_output.txt");
-//             std::ostringstream programOutputContent;
-//             programOutputContent << programOutputFile.rdbuf();
-//             std::string programOutput = programOutputContent.str();
-
-//             std::ifstream expectedOutputFile(folder + "/expected_output.txt");
-//             std::ostringstream expectedOutputContent;
-//             expectedOutputContent << expectedOutputFile.rdbuf();
-//             std::string expectedOutput = expectedOutputContent.str();
-
-//             if (programOutput == expectedOutput)
-//             {
-//                 response = "PASS\n" + programOutput;
-//             }
-//             else
-//             {
-//                 // Handle output error
-//                 std::ofstream programOutputFile(folder + "/program_output.txt");
-//                 programOutputFile << programOutput;
-//                 programOutputFile.close();
-
-//                 system(("diff " + folder + "/program_output.txt " + folder + "/expected_output.txt > " + folder + "/diff_output.txt").c_str());
-
-//                 std::ifstream diffOutputFile(folder + "/diff_output.txt");
-//                 std::ostringstream diffOutputContent;
-//                 diffOutputContent << diffOutputFile.rdbuf();
-//                 response = "OUTPUT ERROR\n" + programOutput + "\n" + diffOutputContent.str();
-//             }
-//         }
-//     }
-
-//     return response;
-// }
-
+// Function for compiling and running the temporary source code file
 
 std::string compileAndRun(const char *sourceFileName, const std::string &folder)
 {
-    // Set the time limit for compilation
-    // struct rlimit cpuLimit;
-    // cpuLimit.rlim_cur = 10; // 10 seconds time limit for compilation
-    // cpuLimit.rlim_max = 15; // 15 seconds hard limit for compilation
-    // setrlimit(RLIMIT_CPU, &cpuLimit);
-
     std::string response;
 
     // Use the folder name in constructing file paths
@@ -218,11 +134,9 @@ std::string compileAndRun(const char *sourceFileName, const std::string &folder)
     return response;
 }
 
-// Function for handling a client connection
+// Function for worker threads to serve the student grading requests
 void *handleClient(void *arg)
 {
-    //set memory limit of the threads which servers the student grading request
-    
 
     while (true)
     {
@@ -240,8 +154,7 @@ void *handleClient(void *arg)
 
         requestStates[threadData.requestID] = 'P';
 
-        // std::string folder = std::to_string(gettid());
-
+        // Create a folder for the request
         std::string cpfolder = "cp expected_output.txt " + threadData.folderName + "/";
         system(cpfolder.c_str());
 

@@ -2,7 +2,6 @@
 
 #include "server.h"
 #include "server_main.h"
-// #include "variable.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -15,9 +14,6 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <queue>
-
-// Define the maximum number of worker threads in the pool
-// std::queue<ThreadData> requestQueue;
 
 // Function for calculating and displaying the average
 void *calculateAverage(void *arg)
@@ -35,7 +31,7 @@ void *calculateAverage(void *arg)
         }
 
         // Sleep for a while before recalculating the average
-        sleep(0.005); // Adjust the sleep duration as needed
+        sleep(0.005); 
     }
 }
 
@@ -123,11 +119,7 @@ void *handleClient(void *arg)
 
         int clientSocket = threadData.clientSocket;
 
-        // Process the request as before
-
-        // ...
-
-        // std::string folder = threadData.folderName + "_" + std::to_string(gettid());
+        
         std::string folder = std::to_string(gettid());
 
         // Create the thread's folder
@@ -137,29 +129,10 @@ void *handleClient(void *arg)
         std::string cpfolder = "cp expected_output.txt " + folder + "/";
         system(cpfolder.c_str());
 
-        // while (true) {
-        // char buffer[1024];
-        // memset(buffer, 0, sizeof(buffer));
-        // ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-
-        // if (bytesRead <= 0)
-        // {
-        //     close(clientSocket);
-        //     // break;
-        //     continue;
-        // }
-
+    
         // Create a temporary source code file in the thread's folder
         std::string tempFileName = folder + "/temp_source.cpp";
-        // std::ofstream tempFile(tempFileName);
-        // if (!tempFile.is_open())
-        // {
-        //     close(clientSocket);
-        //     continue;
-        // }
-
-        // tempFile.write(buffer, bytesRead);
-        // tempFile.close();
+        
 
         size_t fileSize;
         ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
@@ -213,7 +186,7 @@ void *handleClient(void *arg)
 
         // Send the response back to the client
         send(clientSocket, response.c_str(), response.size(), 0);
-        // }
+   
 
         close(clientSocket);
 
@@ -221,10 +194,7 @@ void *handleClient(void *arg)
         std::string dfolder = "rm -r " + folder;
         system(dfolder.c_str());
         std::cout << folder << " deleted." << std::endl;
-        // return NULL;
-
-        //   close(clientSocket);
+        
     }
 
-    // return NULL;
 }

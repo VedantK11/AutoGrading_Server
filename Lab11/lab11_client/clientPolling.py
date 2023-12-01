@@ -18,7 +18,6 @@ def get_timestamp():
 # Function to calculate response time
 def calculate_response_time(start_time, end_time):
     elapsed_time = end_time - start_time
-    # print(elapsed_time)
     print(f"Response time: {round((elapsed_time / 1000000000.0),2)} seconds")
 
 # Submit a new request and capture the request ID

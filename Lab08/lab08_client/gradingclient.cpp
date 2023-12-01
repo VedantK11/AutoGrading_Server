@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         sleep(sleepTimeSeconds);
     }
 
- // Measure the time just after getting the response (Trecv)
+ // Measure the time just after getting the response 
     gettimeofday(&end, NULL);
      totalTime = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 
@@ -153,8 +153,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Total time of the client: " << totalTime << " seconds" << std::endl;
     std::cout << "Throughput: " << successfulResponses/totalTime << " requests/second" <<std::endl;
     printf("Total Requests Sent: %d\n", totalRequests);
-    // printf("Successful Requests (Goodput): %d\n", successfulRequests);
-   
+    
     //time out rate
     std::cout << "Timeout Rate: " << timeoutRequests/totalTime << " requests/second" <<std::endl;
     

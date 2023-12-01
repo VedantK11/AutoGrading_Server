@@ -19,7 +19,7 @@
 
 #include "server_main.h"
 
-//  global variables
+//  global variables for the mutexes and condition variables
 pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queueNotEmpty = PTHREAD_COND_INITIALIZER;
@@ -33,7 +33,7 @@ std::string msg;
 std::mutex countMutex;
 long int count=0;
 
-std::queue<ThreadData> requestQueue;req
+std::queue<ThreadData> requestQueue;
 std::unordered_map<std::string, char> requestStates; // char: 'W', 'P', or 'C'
 
 // Function to generate a unique request ID
@@ -44,6 +44,7 @@ std::string generateRequestID()
     return std::to_string(count);
 }
 
+// Function to read the configuration file
 bool readConfig(const std::string &configFile)
 {
     std::ifstream file(configFile);
@@ -95,17 +96,17 @@ int main(int argc, char *argv[])
     int thread_pool_size = std::atoi(argv[2]);
     readConfig(argv[3]);
 
-
+    //check thread pool size
     thread_pool_size=MAX_THREADS>thread_pool_size?thread_pool_size:MAX_THREADS;
     std::cout<<"thread_pool_size: "<<thread_pool_size<<std::endl;
     std::cout<<MAX_THREADS<<std::endl;
     pthread_t threads[thread_pool_size];
 
 
+    // Set the memory limit for the process
     struct rlimit memoryLimit;
     memoryLimit.rlim_cur = 1500* 1024 * 1024; // 100MB soft limit
     memoryLimit.rlim_max = 2000 * 1024 * 1024; // 150MB hard limit
-    // setrlimit(RLIMIT_AS, &memoryLimit);
     prlimit(getpid(), RLIMIT_AS, &memoryLimit, NULL);
 
     // Create worker threads
@@ -121,7 +122,7 @@ int main(int argc, char *argv[])
      // Load the previous requests and their state from the file
     loadStateFromFile();
 
-    // Create a thread to calculate and display the average
+    // Create a thread to calculate and display the average number of requests in the queue
     pthread_t averageThread;
     if (pthread_create(&averageThread, NULL, calculateAverageRequests, NULL) != 0)
     {
@@ -129,6 +130,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Create a thread to save the request states to a secondary storage
     pthread_t requestStatesThread;
     if (pthread_create(&requestStatesThread, NULL, saveStateToFile, NULL) != 0)
     {
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
     }
 
    
-
+    // Create a socket
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
     {
@@ -191,17 +193,16 @@ int main(int argc, char *argv[])
         char operation[10];
         memset(operation,0,sizeof(operation));
         recv(clientSocket, operation, sizeof(operation), 0);
-        // std::cout<<operation<<std::endl;
 
         if (strncmp(operation, "new",3) == 0)
         {
-            // std::cout<<"***************in new*****************"<<std::endl;
-            
+            // Read the file size from the client
             send(clientSocket, "Send the file size", sizeof("Send the file size"), 0);
 
             size_t fileSize;
             ssize_t sizeReceived = recv(clientSocket, &fileSize, sizeof(fileSize), 0);
 
+            // Check if the file size is valid
             if (sizeReceived != sizeof(fileSize))
             {
                 std::cerr << "Error receiving file size" << std::endl;
@@ -214,9 +215,8 @@ int main(int argc, char *argv[])
                 send(clientSocket, "Send the file", sizeof("Send the file"), 0);
             }
 
-            // recieve file
+            // generate request id and create a folder with that name
             ThreadData threadData;
-            // threadData.clientSocket = clientSocket;
             threadData.requestID = generateRequestID();
             threadData.folderName = threadData.requestID;
 
@@ -243,6 +243,7 @@ int main(int argc, char *argv[])
             size_t remainingBytes = fileSize;
             ssize_t bytesRead=0;
             
+            // Read the file content from the client and save it to the file
             while (remainingBytes > 0)
             {
                 int bytesReceived = recv(clientSocket, buf, std::min(static_cast<size_t>(bufferSize), remainingBytes), 0);
@@ -262,16 +263,6 @@ int main(int argc, char *argv[])
             // Check file size before saving
             if (bytesRead <= FILE_SIZE_LIMIT)
             {
-                // std::string file;
-                // std::string folder = "mkdir " + threadData.folderName;
-                // system(folder.c_str());
-                // file = threadData.folderName + "/" + threadData.requestID + ".cpp";
-
-                // pthread_mutex_lock(&fileMutex);
-                // std::ofstream sourceCodeFile(file);
-                // sourceCodeFile << buffer;
-                // sourceCodeFile.close();
-                // pthread_mutex_unlock(&fileMutex);
 
                 msg = "Your request is accepted and is being processed for grading. Request Id is: " + threadData.requestID;
                 send(clientSocket, msg.c_str(), msg.size(), 0);
@@ -296,16 +287,13 @@ int main(int argc, char *argv[])
         }
         else if (strncmp(operation, "status",6) == 0)
         {
-            // std::cout<<"#################In status################"<<std::endl;
             send(clientSocket,"Send the requestId",sizeof("Send the requestId"),0);
-            //  std::cout<<"#################asked for request Id################"<<std::endl;
-
+            
             // Read the Reqeust Id from the client
             char buffer[1024];
             memset(buffer,0,sizeof(buffer));
             recv(clientSocket, buffer, sizeof(buffer), 0);
             std::string requestID = std::string(buffer);
-            // std::cout<<requestID<<std::endl;
             auto stateIter = requestStates.find(requestID);
             if (stateIter != requestStates.end())
             {
@@ -336,6 +324,7 @@ int main(int argc, char *argv[])
                 }
                 else if (state == 'P')
                 {
+                    // Send the appropriate message based on the state
                     msg = "Your grading request ID " + stateIter->first + " has been accepted and is currently being processed.";
                     send(clientSocket, msg.c_str(), msg.size(), 0);
                 }
@@ -346,16 +335,12 @@ int main(int argc, char *argv[])
                 msg = "Your grading request ID " + requestID + " not found. Please check and resend your request ID or re-send your original grading request.";
                 send(clientSocket, msg.c_str(), msg.size(), 0);
             }
-            // std::cout<<"################# status Gaya################"<<std::endl;
-
+            
         }
 
         // Notify one of the worker threads to pick up the request
-        // if (requestQueue.size() <= thread_pool_size)
-        // {
-        //     pthread_cond_signal(&queueNotEmpty);
-        // }
-         pthread_cond_signal(&queueNotEmpty);
+        pthread_cond_signal(&queueNotEmpty);
+        close(clientSocket);
     }
     close(serverSocket);
     return 0;

@@ -99,26 +99,25 @@ int main(int argc, char *argv[])
     {
         // Send the operation type to the server
         send(clientSocket, operation.c_str(), operation.size(), 0);
-        // std::cout << operation << std::endl;
         char serverMsg[1024];
         memset(serverMsg,0,sizeof(serverMsg));
         recv(clientSocket,serverMsg,sizeof(serverMsg),0);
+
         // Send the request ID to the server
         send(clientSocket, sourceOrRequest.c_str(), sourceOrRequest.size(), 0);
         std::cout << sourceOrRequest << std::endl;
         
-        // Poll the server for the status until it receives the "processing is done" response
+        // receive the status of the request
         char buffer[1024];
         ssize_t bytesRead;
-        // do {
+        
         bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
         if (bytesRead > 0)
         {
             buffer[bytesRead] = '\0';
             std::cout << buffer << std::endl;
         }
-        // sleep(1); // Adjust the polling interval as needed
-        // } while (bytesRead > 0 && std::string(buffer).find("processing is done") == std::string::npos);
+        
     }
 
     close(clientSocket);
