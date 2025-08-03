@@ -70,7 +70,7 @@ This project implements 5 progressive server versions, each addressing specific 
 - **Load Testing Framework**: Multi-client simulation with configurable parameters
 - **Performance Analysis**: Queuing theory validation and comparative benchmarking
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **C++**: Core server and client implementation
 - **Multithreading**: pthreads for concurrent request handling
