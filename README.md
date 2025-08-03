@@ -1,4 +1,347 @@
 
+# Scalable Multi-Threaded Autograding Server with Asynchronous Processing and Load Testing Framework
+A comprehensive multi-version server implementation demonstrating the evolution from single-threaded to asynchronous architecture for automated code compilation, execution, and grading.
+
+## Architecture Evolution
+
+This project implements 5 progressive server versions, each addressing specific scalability and performance challenges:
+
+| Version | Architecture | Key Features |
+|---------|-------------|--------------|
+| **V1** | Single-Threaded | Baseline implementation with basic client-server model |
+| **V2** | Load Testing Framework | Multi-client simulation and performance measurement |
+| **V3** | Multi-Threaded (Create-Destroy) | Dynamic thread creation per request |
+| **V4** | Thread Pool | Controlled resource management with worker threads |
+| **V5** | Asynchronous Processing | Asynchronous handling of client requests|
+| **V5+** | Asynchronous Processing | Non-blocking request handling with persistent storage and security|
+
+## Directory Structure
+
+```bash
+├── Experiments/                     # Comprehensive performance comparison
+│   ├── AvgResponseTimeComparison_allVersions.csv
+│   ├── AvgResponseTimeComparison.png
+│   ├── ComparisonCPU_utilisation.csv
+│   ├── ComparisonThroughput.csv
+│   ├── cpu_utilisation.png
+│   ├── plot.py
+│   └── ThroughptutComparison.png
+├── Lab06/                          # Version 1: Single-Threaded Server
+│   ├── lab06_client/
+│   ├── lab06_server/
+│   └── Performance_experiments_lab06.pdf
+├── Lab07/                          # Version 2: Load Testing Framework
+│   ├── Experiments/
+│   ├── lab07_client/
+│   └── lab07_server/
+├── Lab08/                          # Version 3: Multi-Threaded (Create-Destroy)
+│   ├── Experiments/
+│   ├── lab08_client/
+│   └── lab_08_server/
+├── Lab09/                          # Version 4: Thread Pool Architecture
+│   ├── Experiments/
+│   ├── lab09_client/
+│   └── lab09_server/
+├── Lab10/                          # Version 5: Asynchronous Server
+│   ├── Experiments/
+│   ├── lab10_client/
+│   └── lab10_server/
+├── Lab11/                          # Version 5+: Enhanced Asynchronous with Security
+│   ├── Experiments/
+│   ├── lab11_client/
+│   └── lab11_server/
+├── presentation/
+│   └── DECS.pdf
+└── README.md
+```
+
+## Features
+
+### Core Functionality
+- **Automated Code Grading**: Compiles, executes, and validates C/C++ programs
+- **Multi-Version Architecture**: Progressive complexity from single-threaded to asynchronous
+- **Comprehensive Error Handling**: Compiler errors, runtime errors, and output mismatches
+- **Performance Monitoring**: Throughput, response time, CPU utilization tracking
+
+### Technical Highlights
+- **Thread Pool Management**: Efficient worker thread allocation and resource control
+- **Asynchronous Request Processing**: Non-blocking architecture with request ID tracking
+- **Persistent Storage**: File-based result storage for server restart resilience  
+- **Load Testing Framework**: Multi-client simulation with configurable parameters
+- **Performance Analysis**: Queuing theory validation and comparative benchmarking
+
+## 🛠️ Technologies Used
+
+- **C++**: Core server and client implementation
+- **Multithreading**: pthreads for concurrent request handling
+- **Bash Scripting**: Load testing automation and performance measurement
+- **Python**: Data analysis, plotting, and client polling mechanisms
+- **System Programming**: Socket programming, process management, file I/O
+
+##  Quick Start Guide
+
+### Prerequisites
+```bash
+sudo apt-get install build-essential python3
+```
+
+##  Detailed Usage Instructions
+
+### Version 1: Single-Threaded Server (Lab06)
+
+**Basic single-threaded implementation for baseline performance**
+
+#### Client
+```bash
+# Compile
+g++ gradingclient.cpp -o gradingclient
+
+# Run
+./gradingclient <serverIP:port> <sourceCodeFileTobeGraded>
+```
+
+#### Server
+```bash
+# Compile
+g++ gradingserver.cpp -o gradingserver
+
+# Run
+./gradingserver <port>
+```
+
+---
+
+### Version 2: Load Testing Framework (Lab07)
+
+**Adds performance measurement capabilities with multi-client simulation**
+
+#### Client
+```bash
+# Compile
+g++ gradingclient.cpp -o gradingclient
+
+# Run single client
+./gradingclient <serverIP:port> <sourceCodeFileTobeGraded> <loopNum> <sleepTimeSeconds>
+
+# Run load test
+./loadtest.sh <numClients> <loopNum> <sleepTimeSeconds>
+```
+
+#### Server
+```bash
+# Compile
+g++ gradingserver.cpp -o gradingserver
+
+# Run
+./gradingserver <port>
+```
+
+---
+
+### Version 3: Multi-Threaded Server (Lab08)
+
+**Implements dynamic thread creation with timeout support**
+
+#### Client
+```bash
+# Compile
+g++ gradingclient.cpp -o gradingclient
+
+# Run
+./gradingclient <serverIP:port> <sourceCodeFileTobeGraded> <loopNum> <sleepTimeSeconds> <timeout-seconds>
+
+# Load test
+./loadtest.sh <numClients> <loopNum> <sleepTimeSeconds>
+```
+
+#### Server
+```bash
+# Compile
+g++ gradingserver.cpp -o gradingserver
+
+# Run
+./gradingserver <port>
+```
+
+---
+
+### Version 4: Thread Pool Architecture (Lab09)
+
+**Controlled thread management with request queuing**
+
+#### Client
+```bash
+# Compile
+g++ gradingclient.cpp -o gradingclient
+
+# Run
+./gradingclient <serverIP:port> <sourceCodeFileTobeGraded> <loopNum> <sleepTimeSeconds> <timeout-seconds>
+
+# Load test
+./loadtest.sh <numClients> <loopNum> <sleepTimeSeconds>
+```
+
+#### Server
+```bash
+# Compile
+make
+
+# Run
+./server <port> <thread_pool_size>
+```
+
+---
+
+### Version 5: Asynchronous Server (Lab10)
+
+**Non-blocking request processing with persistent storage**
+
+#### Client
+```bash
+# Compile
+g++ client.cpp -o client
+
+# Submit new request
+./client new <serverIP:port> <sourceCodeFileTobeGraded>
+
+# Check request status
+./client status <serverIP:port> <requestID>
+
+# Run with automatic polling
+python3 clientPolling.py <serverIP:port> <sourceCodeFile> <polling_interval>
+
+# Load test
+./loadtest.sh <serverIP:port> <sourceCodeFile> <num_clients> <polling_interval>
+```
+
+#### Server
+```bash
+# Compile
+make
+
+# Run
+./server <port> <thread_pool_size>
+```
+
+---
+
+### Version 5+: Enhanced Asynchronous (Lab11)
+
+**Adds security features and resource limitations**
+
+#### Client
+```bash
+# Compile
+g++ client.cpp -o client
+
+# Submit new request
+./client new <serverIP:port> <sourceCodeFileTobeGraded>
+
+# Check request status
+./client status <serverIP:port> <requestID>
+
+# Run with automatic polling
+python3 clientPolling.py <serverIP:port> <sourceCodeFile> <polling_interval>
+
+# Load test
+./loadtest.sh <serverIP:port> <sourceCodeFile> <num_clients> <polling_interval>
+```
+
+#### Server
+```bash
+# Compile
+make
+
+# Run
+./server <port> <thread_pool_size> <config_file>
+```
+
+## Server Response Types
+
+- **PASS**: Program executed successfully with correct output
+- **COMPILER ERROR**: Compilation failed (includes compiler output)
+- **RUNTIME ERROR**: Program crashed during execution
+- **OUTPUT ERROR**: Program ran but produced incorrect output (includes diff)
+
+## Performance Analysis
+
+### Key Metrics Measured
+- **Goodput vs Number of Clients**
+- **Average Response Time**
+- **CPU Utilization**
+- **Request Queue Length**
+- **Thread Pool Efficiency**
+
+### Test Programs Available
+- `pass.cpp` - Correct program that should pass
+- `CompileTimeErrorCode.cpp` - Program with compilation errors
+- `RuntimeErrorCode.cpp` - Program that crashes during execution
+- `OutputErrorCode.cpp` - Program with incorrect output
+
+## Experimental Results
+
+Our comprehensive performance analysis in the `Experiments/` directory includes:
+- Cross-version performance comparisons
+- CPU utilization analysis
+- Response time characteristics
+- Throughput measurements
+- Queue theory validation
+
+Key findings demonstrate progressive improvements:
+- **Single-threaded**: Baseline performance
+- **Multi-threaded**: Better concurrency but resource contention
+- **Thread Pool**: Optimal resource utilization
+- **Asynchronous**: Best performance under variable loads
+
+## Usage Examples
+
+### Basic Grading Flow
+```bash
+# Version 1-3 (Synchronous)
+./gradingclient localhost:8080 hello-world.cpp
+# Response: "PASS" or error details immediately
+
+# Version 4-5 (Asynchronous)
+./client new localhost:8080 hello-world.cpp
+# Response: "Your grading request ID 12345 has been accepted..."
+
+./client status localhost:8080 12345
+# Response: "Your grading request ID 12345 processing is done, PASS"
+```
+
+### Load Testing Example
+```bash
+# Test with 20 concurrent clients, 10 requests each, 1 second between requests
+./loadtest.sh 20 10 1
+
+# Generates performance metrics and plots
+```
+
+##  Implementation Details
+
+### Asynchronous Architecture (Lab10/11)
+- **Request ID Management**: Unique identifier generation and tracking
+- **State Management**: Request states (Waiting, Processing, Complete)
+- **Persistent Storage**: File-based result storage with CSV tracking
+- **Polling Mechanism**: Client-side status checking with configurable intervals
+
+### Security Features (Lab11)
+- **Resource Limits**: Configurable via `Parameters.config`
+- **Safe Execution**: Controlled environment for student code
+- **Process Isolation**: Secure compilation and execution
+
+## Acknowledgments
+
+This project was developed as part of CS744: Design and Engineering of Computing Systems at IIT Bombay under the guidance of Prof. Varsha Apte
+
+## Authors
+
+All authors contributed equally in this project
+
+---
+
+*This project showcases the evolution from basic client-server architecture to enterprise-level asynchronous processing systems, with comprehensive performance analysis validating theoretical predictions.*
+<!-- 
 # Author's Name
 
 1. Ravi Kumar Choubey
@@ -327,4 +670,4 @@ make
 ##### Run :-
 ```bash
 ./server <port> <thread_pool_size>  <config_file>
-```
+``` -->
