@@ -26,27 +26,27 @@ This project implements 5 progressive server versions, each addressing specific 
 │   ├── cpu_utilisation.png
 │   ├── plot.py
 │   └── ThroughptutComparison.png
-├── Lab06/                          # Version 1: Single-Threaded Server
+├── single-threaded-server/                       # Version 1: Single-Threaded Server
 │   ├── lab06_client/
 │   ├── lab06_server/
 │   └── Performance_experiments_lab06.pdf
-├── Lab07/                          # Version 2: Load Testing Framework
+├── load-testing-framework/                       # Version 2: Load Testing Framework
 │   ├── Experiments/
 │   ├── lab07_client/
 │   └── lab07_server/
-├── Lab08/                          # Version 3: Multi-Threaded (Create-Destroy)
+├── multi-threaded-server/                        # Version 3: Multi-Threaded (Create-Destroy)
 │   ├── Experiments/
 │   ├── lab08_client/
 │   └── lab_08_server/
-├── Lab09/                          # Version 4: Thread Pool Architecture
+├── thread-pool-server/                           # Version 4: Thread Pool Architecture
 │   ├── Experiments/
 │   ├── lab09_client/
 │   └── lab09_server/
-├── Lab10/                          # Version 5: Asynchronous Server
+├── asynchronous-server/                          # Version 5: Asynchronous Server
 │   ├── Experiments/
 │   ├── lab10_client/
 │   └── lab10_server/
-├── Lab11/                          # Version 5+: Enhanced Asynchronous with Security
+├── enhanced-asynchronous-server/                 # Version 5+: Enhanced Asynchronous with Security
 │   ├── Experiments/
 │   ├── lab11_client/
 │   └── lab11_server/
